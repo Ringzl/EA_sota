@@ -2,12 +2,14 @@
 * **测试问题**： 
 Single Objective Bound Constrained Real-Parameter Numerical Optimisation, IEEE Congress on Evolutionary Computation (CEC) 2022. (F1 - F12) 中  "F2", "F4",  "F6", "F7", "F8", "F9", "F12" 问题
 <div align="center">
-<img src="./imgs/CEC2022.png" width="600" />
+<img src="https://github.com/Ringzl/EA_sota/blob/master/imgs/CEC2022.png?raw=true" width="600" />
 </div>
 
 * **测试算法**：
-  * DE_rand: $v = x_{r1} + F \times(x_{r2} - x_{r3})$
-  * DE_current_to_best: $v = x_{i} + F \times (x_{b} - x_{i}) + F \times (x_{r2} - x_{r3})$
+  * DE_rand: 
+  $v = x_{r1} + F \times(x_{r2} - x_{r3})$
+  * DE_current_to_best: 
+  $v = x_{i} + F \times (x_{b} - x_{i}) + F \times (x_{r2} - x_{r3})$
   * RCGA: 模拟二进制交叉（SBX）和多项式变异（PM）
   * SHADE： Success-History Based Parameter Adaptation for Differential Evolution
   * EA4eig： Cooperative model of CoBiDE、IDEbd, CMA-ES, and jSO

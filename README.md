@@ -2,7 +2,7 @@
 * **测试问题**： 
 Single Objective Bound Constrained Real-Parameter Numerical Optimisation, IEEE Congress on Evolutionary Computation (CEC) 2022. (F1 - F12) 中  "F2", "F4",  "F6", "F7", "F8", "F9", "F12" 问题
 <div align="center">
-<img src="https://github.com/Ringzl/EA_sota/blob/master/imgs/CEC2022.png?raw=true" width="600" />
+<img src="https://raw.githubusercontent.com/Ringzl/EA_sota/master/imgs/CEC2022.png?token=GHSAT0AAAAAACSN5EL7TEZMPZ7OUFPL6CGOZSYSJZQ" width="600" />
 </div>
 
 * **测试算法**：

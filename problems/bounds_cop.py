@@ -1,5 +1,6 @@
 import numpy as np
 
+from opfunu.cec_based.cec2022 import *
 
 
 class TestProblem:  # RC04
@@ -57,3 +58,47 @@ class Rastrigin:
         z = 0.05 * x
         f = np.sum(z ** 2 - 10 * np.cos(2 * np.pi * z) + 10)
         return f
+
+
+class CEC2022:
+    def __init__(self, f_name, dim):
+        
+        self.dim = dim
+
+        if f_name == "F1":
+            self.func = F12022(ndim=dim)
+        elif f_name == "F2":
+            self.func = F22022(ndim=dim)
+        elif f_name == "F3":
+            self.func = F32022(ndim=dim)
+        elif f_name == "F4":
+            self.func = F42022(ndim=dim)
+        elif f_name == "F5":
+            self.func = F52022(ndim=dim)
+        elif f_name == "F6":
+            self.func = F62022(ndim=dim)
+        elif f_name == "F7":
+            self.func = F72022(ndim=dim)
+        elif f_name == "F8":
+            self.func = F82022(ndim=dim)
+        elif f_name == "F9":
+            self.func = F92022(ndim=dim)
+        elif f_name == "F10":
+            self.func = F102022(ndim=dim)
+        elif f_name == "F11":
+            self.func = F112022(ndim=dim)
+        elif f_name == "F12":
+            self.func = F122022(ndim=dim)
+
+        self.ub = self.func.ub
+        self.lb = self.func.lb
+
+    def objective_function(self, x):
+        return self.func.evaluate(x)
+    
+
+
+if __name__ == "__main__":
+    prob = CEC2022("F1", 10)
+    print(prob.func.f_bias)
+    print(prob.objective_function(prob.func.create_solution()))

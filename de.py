@@ -1,7 +1,7 @@
 import math
 import numpy as np
-
-from problems.bounds_cop import Rastrigin
+import time
+from problems.bounds_cop import CEC2022
 
 class DE:
 
@@ -53,10 +53,10 @@ class DE:
                 r3 = np.random.randint(0, self.popsize - 1)
             
             # DE/rand/1
-            mutation = x[r1] + self.F * (x[r2] - x[r3])
+            # mutation = x[r1] + self.F * (x[r2] - x[r3])
             
             # DE/current-to-best/1
-            # mutation = x[i] + self.F * (x[b]-x[i]) + self.F * (x[r1] - x[r2])
+            mutation = x[i] + self.F * (x[b]-x[i]) + self.F * (x[r1] - x[r2])
 
             for j in range(self.dim):
                 #  判断变异后的值是否满足边界条件，不满足需重新生成
@@ -84,9 +84,9 @@ class DE:
 
         for i in range(1, self.max_iter+1):
 
-            if i % 10 == 0:
-                info = '  * Generation {:d}: best_so_far_y {:7.5e}, min(y) {:7.5e} & Evaluations {:d}'
-                print(info.format(self.current_generation, self.best_so_far_y, np.min(y), self.n_fes))
+            # if i % 10 == 0:
+            #     info = '  * Generation {:d}: best_so_far_y {:7.5e}, min(y) {:7.5e} & Evaluations {:d}'
+            #     print(info.format(self.current_generation, self.best_so_far_y, np.min(y), self.n_fes))
     
             ox = self.mutation_crossover(x, y)
             oy = np.empty(ox.shape[0])
@@ -107,9 +107,34 @@ class DE:
         return self.best_so_far_x, self.best_so_far_y
 
 if __name__ == "__main__":
-    problem = Rastrigin()
+    
+    f_lst = [
+         "F2", "F4",  "F6", "F7", "F8", "F9", "F12"
+        
+    ]
 
-    shade = DE(problem, 100, 1e4)
-    bestx, besty = shade.optimize()
+    fb_lst = [
+        400, 800, 1800, 2000, 2200, 2300, 2700
+    ]
 
-    print(f"Best x: {bestx}, Best y: {besty}")
+    M = 10 # 独立运行次数
+
+    ex_time = 0
+
+    for k,fname in enumerate(f_lst):
+        problem = CEC2022(fname, dim=10)
+       
+        err_lst = []
+        start = time.time()
+        for i in range(M):
+            de = DE(problem, 100, 1e5)
+            bestx, besty = de.optimize()
+            err_lst.append(besty - fb_lst[k])
+        end = time.time()
+        t = (end - start)/M
+        ex_time += t
+        print(f"DE 算法在问题{fname}上10次独立实验目标值结果: mean(std)={np.mean(err_lst):.2e}({np.std(err_lst):.2e})")
+        print(f"运行时间： {t:.2f} s")
+    
+    print("实验结束！")
+    print(f"平均运行时间： {ex_time:.2f} s")

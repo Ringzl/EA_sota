@@ -3,7 +3,9 @@ import random
 import numpy as np
 from scipy.stats import cauchy
 
-from problems.bounds_cop import Rastrigin
+# from problems.bounds_cop import Rastrigin
+import time
+from problems.bounds_cop import CEC2022
 
 def nahvyb_expt(N, k, expt=None):
     opora = list(range(N))  # Create a list from 0 to N-1
@@ -654,17 +656,42 @@ class EA4eig:
                 self.weights = self.weights / np.sum(self.weights)
                 self.mueff = (np.sum(self.weights) ** 2) / np.sum(self.weights ** 2)  #
 
-            print(self.best_so_far_y)
+            # print(self.best_so_far_y)
+
+        return self.best_so_far_x, self.best_so_far_y
             
 
 if __name__ == "__main__":
 
-    problem = Rastrigin()
+    f_lst = [
+         "F2", "F4",  "F6", "F7", "F8", "F9", "F12"
+    ]
 
-    alg = EA4eig(problem, 100, 1e4)
-    bestx, besty = alg.optimize()
+    fb_lst = [
+        400, 800, 1800, 2000, 2200, 2300, 2700
+    ]
 
-    print(f"Best x: {bestx}, Best y: {besty}")
+    M = 10 # 独立运行次数
+
+    ex_time = 0
+
+    for k,fname in enumerate(f_lst):
+        problem = CEC2022(fname, dim=10)
+       
+        err_lst = []
+        start = time.time()
+        for i in range(M):
+            de = EA4eig(problem, 100, 1e5)
+            bestx, besty = de.optimize()
+            err_lst.append(besty - fb_lst[k])
+        end = time.time()
+        t = (end - start)/M
+        ex_time += t
+        print(f"EA4eig 算法在问题{fname}上10次独立实验目标值结果: mean(std)={np.mean(err_lst):.2e}({np.std(err_lst):.2e})")
+        print(f"运行时间： {t:.2f} s")
+    
+    print("实验结束！")
+    print(f"平均运行时间： {ex_time:.2f} s")
 
         
 

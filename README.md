@@ -1,4 +1,4 @@
-### 连续优化
+### 连续优化 (单目标)
 * **测试问题**： 
 Single Objective Bound Constrained Real-Parameter Numerical Optimisation, IEEE Congress on Evolutionary Computation (CEC) 2022. (F1 - F12) 中  "F2", "F4",  "F6", "F7", "F8", "F9", "F12" 问题
 <div align="center">
@@ -6,18 +6,18 @@ Single Objective Bound Constrained Real-Parameter Numerical Optimisation, IEEE C
 </div>
 
 * **测试算法**：
-  * DE_rand: 
+  * **DE_rand**: 
   $v = x_{r1} + F \times(x_{r2} - x_{r3})$
-  * DE_current_to_best: 
+  * **DE_current_to_best**: 
   $v = x_{i} + F \times (x_{b} - x_{i}) + F \times (x_{r2} - x_{r3})$
-  * RCGA: 模拟二进制交叉（SBX）和多项式变异（PM）
-  * SHADE： Success-History Based Parameter Adaptation for Differential Evolution
-  * EA4eig： Cooperative model of CoBiDE、IDEbd, CMA-ES, and jSO
+  * **RCGA**: 模拟二进制交叉（SBX）和多项式变异（PM）
+  * **SHADE**： Success-History Based Parameter Adaptation for Differential Evolution
+  * **EA4eig**： Cooperative model of CoBiDE、IDEbd, CMA-ES, and jSO
 
 * **测试结果**： 
 进行10次独立实验, 函数评估次数: $10^5$ 次
 
-  * 目标值优化结果
+  * 目标值（误差）优化结果
 
     | 算法/问题 | F2 | F4 | F6 | F7 | F8 | F9 | F12 |
     |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
@@ -39,12 +39,43 @@ Single Objective Bound Constrained Real-Parameter Numerical Optimisation, IEEE C
 
 **结论：** 综合性能和效率， **EA4eig** 算法表现最好。
 
-### 连续约束优化
+### 连续约束优化 (单目标)
+
+* **测试问题**：
+Problem Definitions and Evaluation Criteria for the CEC 2017 Competition on Constrained Real- Parameter Optimization（C01-C28） 节选 C01 - C05
+<div align="center">
+<img src="https://s2.loli.net/2024/05/31/9PuDtTFxJ1VYGls.png" width="500" />
+</div>
+
+* **测试算法**
+  * **C2oDE** (2018): 
+    Composite Differential Evolution for Constrained Evolutionary Optimization
+  * **DeCODE** (2019): 
+    Decomposition-Based Multiobjective Optimization for Constrained Evolutionary Optimization
+  * **CCEF** (2024): 
+    A Competitive and Cooperative Evolutionary Framework for Ensemble of Constraint Handling Techniques
+
+* **测试结果**
+进行10次独立实验, 函数评估次数: $10^5$ 次
+
+  * 目标值优化结果
+
+  | 算法/问题 | C01 | C02 | C03 | C04 | C05 |
+  |:---:|:---:|:---:|:---:|:---:|:---:|
+  | C2oDE  | 5.00e-15(4.16e-15) | 1.74e-14(1.61e-14) | 9.43e+02(4.76e+02) *20%* | 2.51e+01(3.74e+00) | 2.48e-10(1.44e-10) |
+  | DeCODE | 4.75e-24(4.70e-24) | 3.29e-24(2.80e-24) | **2.40e-02(7.19e-02)** | 1.59e+01(7.46e-01) | 2.38e-17(2.52e-17) |
+  | CCEF   | **8.37e-26(7.84e-26)** | **9.17e-26(7.03e-26)** | 1.81e+02(2.06e+02) | **1.51e+01(1.60e+00)** | **7.57e-19(6.27e-19)** |
 
 
+  * 运行时间
 
+  | 算法/问题              | 运行时间 |
+  |--------------------|----|
+  | C2oDE  |   70.07 s  |
+  | DeCODE |   69.94 s  |
+  | CCEF   |   82.10 s  |
 
-
+**结论： C2oDE 明显差于其他两种算法，CCEF在含等式约束问题上表现不太好，其他问题相比与DeCODE有略微优势。综合来看，DeCODE值得选择。
 
 ### 组合优化
 

@@ -75,7 +75,7 @@ Problem Definitions and Evaluation Criteria for the CEC 2017 Competition on Cons
   | DeCODE |   69.94 s  |
   | CCEF   |   82.10 s  |
 
-**结论： C2oDE 明显差于其他两种算法，CCEF在含等式约束问题上表现不太好，其他问题相比与DeCODE有略微优势。综合来看，DeCODE值得选择。
+**结论： C2oDE 明显差于其他两种算法，CCEF在含等式约束问题上表现不太好，其他问题相比与DeCODE有略微优势。综合来看，DeCODE值得选择。**
 
 ### 组合优化
 

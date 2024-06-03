@@ -37,7 +37,9 @@ Single Objective Bound Constrained Real-Parameter Numerical Optimisation, IEEE C
   | SHADE              |  110.02 s  |
   | EA4eig             |  89.24 s  |
 
-**结论：** 综合性能和效率， **EA4eig** 算法表现最好。
+**观点：** 综合性能和效率， **EA4eig** 算法表现最好。
+
+---
 
 ### 连续约束优化 (单目标)
 
@@ -59,34 +61,62 @@ Problem Definitions and Evaluation Criteria for the CEC 2017 Competition on Cons
 进行10次独立实验, 函数评估次数: $10^5$ 次
 
   * 目标值优化结果
-
-  | 算法/问题 | C01 | C02 | C03 | C04 | C05 |
+  
+  | <div style="width: 80pt"> 算法/问题 | <div style="width: 120pt"> C01 | <div style="width: 120pt"> C02 |  <div style="width: 150pt"> C03 | <div style="width: 120pt"> C04 | <div style="width: 120pt"> C05 |
   |:---:|:---:|:---:|:---:|:---:|:---:|
   | C2oDE  | 5.00e-15(4.16e-15) | 1.74e-14(1.61e-14) | 9.43e+02(4.76e+02) *20%* | 2.51e+01(3.74e+00) | 2.48e-10(1.44e-10) |
   | DeCODE | 4.75e-24(4.70e-24) | 3.29e-24(2.80e-24) | **2.40e-02(7.19e-02)** | 1.59e+01(7.46e-01) | 2.38e-17(2.52e-17) |
   | CCEF   | **8.37e-26(7.84e-26)** | **9.17e-26(7.03e-26)** | 1.81e+02(2.06e+02) | **1.51e+01(1.60e+00)** | **7.57e-19(6.27e-19)** |
 
-
   * 运行时间
 
-  | 算法/问题              | 运行时间 |
+  | 算法/问题 | 运行时间 |
   |--------------------|----|
   | C2oDE  |   70.07 s  |
   | DeCODE |   69.94 s  |
   | CCEF   |   82.10 s  |
 
-**结论： C2oDE 明显差于其他两种算法，CCEF在含等式约束问题上表现不太好，其他问题相比与DeCODE有略微优势。综合来看，DeCODE值得选择。**
+**观点**： C2oDE 明显差于其他两种算法，CCEF在含等式约束问题上表现不太好，其他问题相比与DeCODE有略微优势。综合来看，DeCODE值得选择。
+
+---
+
+### 连续多目标优化
+
+* **测试问题** : WFG1-9 （节选WFG1 和 WFG4 进行测试）
+<div align="center">
+<img src="https://s2.loli.net/2024/06/03/btlQ9fiqvjws8VI.png" width="500" />
+</div>
+
+* **测试算法**
+  * **NSGA-II (2002)**: 
+  * **IBEA (2004)**:
+  * **MOEA/D (2007)**: 
+  * **Two_arch (2015)**
+  * **RVEA (2016)**: 
+
+* **测试结果**
+
+
+**观点**：
+
+
+---
+
 
 ### 组合优化
 
+* **测试算法**
+  * **pyomo+SCIP**:
+  * **pyomo+Gurobi**:
+  * **ACO**:
+  * **VNS**:
+  * **ALNS**:
 
 
-
-#### TSP问题
-
+* **TSP问题**
 
 
+* **CVRP问题**
 
-#### CVRP问题
-
+**观点**：
 

@@ -88,11 +88,11 @@ Problem Definitions and Evaluation Criteria for the CEC 2017 Competition on Cons
 </div>
 
 * **测试算法**
-  * **NSGA-II (2002)**: 
-  * **IBEA (2004)**:
-  * **MOEA/D (2007)**: 
-  * **Two_arch (2015)**
-  * **RVEA (2016)**: 
+  * **NSGA-II (2002)**: A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II
+  * **IBEA (2004)**: Indicator-Based Selection in Multiobjective Search
+  * **MOEA/D (2007)**: MOEA/D: A Multiobjective Evolutionary Algorithm Based on Decomposition
+  * **Two_arch2 (2015)**: Two_Arch2: An Improved Two-Archive Algorithm for Many-Objective Optimization
+  * **RVEA (2016)**: A Reference Vector Guided Evolutionary Algorithm for Many-Objective Optimization
 
 * **测试结果**
 

@@ -1,13 +1,23 @@
 import math
-
 import numpy as np
+
+from copy import deepcopy
+import time
+from pymoo.problems.multi import ZDT1
+from pymoo.problems.many.dtlz import DTLZ2, DTLZ3
+from pymoo.problems.many.wfg import WFG1, WFG4
+from pymoo.indicators.hv import HV
+
 import matplotlib.pyplot as plt
-from pymoo.problems import get_problem
-from pymoo.indicators.gd import GD
 from mpl_toolkits.mplot3d import Axes3D
 
-# from Algorithms.MVMOP1.WFGmv import WFG1
-from Algorithms.MVMOP2.MVMOP import ZDT1,ZDT2, ZDT3, ZDT4, ZDT6
+from pymoo.indicators.igd import IGD
+# from pymoo.indicators.igd_plus import IGDPlus
+
+import warnings
+warnings.filterwarnings("ignore")
+from pymoo.config import Config
+Config.warnings['not_compiled'] = False
 
 class Pop(object):
     def __init__(self, X):
@@ -23,7 +33,7 @@ class Pop(object):
 
 
 class TA2(object):
-    def __init__(self, prob, MaxFEs, popsize):
+    def __init__(self, prob, popsize, MaxFEs):
 
         self.MaxFEs = MaxFEs
         self.popsize = popsize
@@ -87,8 +97,9 @@ class TA2(object):
 
     def update_CA(self, pop):
         # 先添加
-        if self.CA is None:
-            self.CA = pop
+        if self.CA is None or len(self.CA.ObjV) == 0:
+            self.CA = Pop(pop.X)
+            self.CA.ObjV = pop.ObjV
         else:
             self.CA.X = np.vstack([self.CA.X, pop.X])
             self.CA.ObjV = np.vstack([self.CA.ObjV, pop.ObjV])
@@ -122,21 +133,26 @@ class TA2(object):
 
     def update_DA(self, pop):
         # 先添加
-        if self.DA is None:
-            self.DA = pop
+        if self.DA is None or len(self.DA.ObjV) == 0:
+            self.DA = Pop(pop.X)
+            self.DA.ObjV = pop.ObjV
         else:
             self.DA.X = np.vstack([self.DA.X, pop.X])
             self.DA.ObjV = np.vstack([self.DA.ObjV, pop.ObjV])
 
         # 找非支配解,求DA
         ND = self.get_nds(self.DA.ObjV)
+        N = len(ND)
+
+        if N <= 1:
+            return 
+
         self.DA.X = self.DA.X[ND]
         self.DA.ObjV = self.DA.ObjV[ND]
 
-        N = len(ND)
         if N <= self.popsize:
             return
-
+        
         # 首先选出极点
         choose = np.full(N, False)
         extreme1 = np.argmin(self.DA.ObjV, axis=0)
@@ -256,7 +272,7 @@ class TA2(object):
         self.initlization()
 
         while(self.FEs < self.MaxFEs):
-            print(self.FEs)
+            # print(self.FEs)
             # MatingSelection
             ParentC, ParentM = self.matingSelection()
 
@@ -298,15 +314,50 @@ def plot_NDS(PF, F):
 
 
 if __name__ == "__main__":
-    problem = get_problem("dtlz1", n_var=10, n_obj=3)
-    # problem = WFG1(n_var=10, n_obj=3)
+    # problem = ZDT1(n_var=10)  #n_obj=3
+    # ta2 = TA2(problem, 100, 1e5)
+    # igd = IGD(problem.pareto_front())
+    # X, F = ta2.run()
+    # print(igd(F))
+    # plot_NDS(problem.pareto_front(), F)
 
-    # problem = ZDT6(10, 0.2, "uniform")
-    ta2 = TA2(prob=problem, MaxFEs=20000, popsize=100)
-    X, F = ta2.run()
-    PF = problem.pareto_front()
-    # plot_NDS1(problem.pareto_front(), F)
-    plot_NDS(PF, F)
-    ind = GD(PF)
-    print(ind(F))
-    print(X)
+    p_dct = {
+        # 'DTLZ2': DTLZ2,
+        # 'DTLZ3': DTLZ3,
+        'WFG1': WFG1,   
+        # 'WFG4': WFG4
+    }
+
+    M = 10 # 独立运行次数
+    n_var = 10
+    n_obj = 3
+
+    refpoint = np.array([2 * i + 1 for i in range(1, n_obj+1)])
+    ind = HV(ref_point=refpoint)
+
+    ex_time = 0
+    for k, fname in enumerate(p_dct):
+
+        problem = p_dct[fname](n_var=10, n_obj=3)
+        hv_lst = []
+        igd_lst = []
+        start = time.time()
+        for i in range(M):
+            alg = TA2(problem, 100, 1e5)
+            X, F = alg.run()
+            print(np.any(np.isnan(F)))
+            hv = ind(F)
+            igd = IGD(problem.pareto_front())
+            igd_lst.append(igd(F))
+            hv_lst.append(hv/np.prod(refpoint))
+        
+        end = time.time()
+        t = (end - start)/M
+        ex_time += t
+        print(f"TA2 算法在问题{fname}上10次独立实验目标值HV结果: mean(std)={np.mean(hv_lst):.2e}({np.std(hv_lst):.2e})")
+        print(f"TA2 算法在问题{fname}上10次独立实验目标值IGD结果: mean(std)={np.mean(igd_lst):.2e}({np.std(igd_lst):.2e})")
+        print(f"运行时间： {t:.2f} s")
+    
+    print("实验结束！")
+    print(f"平均运行时间： {ex_time:.2f} s")
+

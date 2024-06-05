@@ -2,20 +2,24 @@ import math
 import numpy as np
 from scipy.special import comb
 from scipy.spatial.distance import cdist
-
-from pymoo.problems import get_problem
-from pymoo.indicators.gd import GD
-from pymoo.indicators.hv import HV
-from pymoo.indicators.igd_plus import IGDPlus
 from itertools import combinations
 
-# from Algorithms.MOP.DTLZ import DTLZ1, DTLZ2, DTLZ3, DTLZ4, DTLZ5, DTLZ6, DTLZ7
-# from Algorithms.MOP.WFG import WFG1,WFG2,WFG3,WFG4,WFG5,WFG6, WFG7,WFG8,WFG9
-from Algorithms.MVMOP1.DTLZmv import DTLZ1
-from Algorithms.MVMOP1.WFGmv import WFG1
+import time
+from pymoo.problems.multi import ZDT1
+from pymoo.problems.many.dtlz import DTLZ2, DTLZ3
+from pymoo.problems.many.wfg import WFG1, WFG4
+from pymoo.indicators.hv import HV
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+
+from pymoo.indicators.igd import IGD
+# from pymoo.indicators.igd_plus import IGDPlus
+
+import warnings
+warnings.filterwarnings("ignore")
+from pymoo.config import Config
+Config.warnings['not_compiled'] = False
 
 class Pop(object):
     def __init__(self, X):
@@ -31,7 +35,7 @@ class Pop(object):
 
 
 class RVEA(object):
-    def __init__(self, prob, MaxFEs, popsize):
+    def __init__(self, prob, popsize, MaxFEs):
         self.MaxFEs = MaxFEs
         self.popsize = popsize
 
@@ -212,7 +216,6 @@ class RVEA(object):
         self.initializtion()
 
         while (self.FEs < self.MaxFEs):
-            print(self.FEs)
 
             # 子代生成
             matingpool = np.random.randint(0, self.pop.X.shape[0], self.popsize)
@@ -260,15 +263,50 @@ def plot_NDS(PF, F):
     plt.show()
 
 if __name__ == "__main__":
-    problem1 = get_problem("wfg1", n_var = 10, n_obj = 3)
+    # problem = ZDT1(n_var=10)
+    # rvea = RVEA(problem, 100, 1e5)
+    # igd = IGD(problem.pareto_front())
+    # X, F = rvea.run()
+    # print(igd(F))
+    # plot_NDS(problem.pareto_front(), F)
 
-    PF = problem1.pareto_front()
-    problem = WFG1(n_var=10, n_obj=3)
+    p_dct = {
+        # 'WFG1': WFG1,   
+        # 'WFG4': WFG4
+        'DTLZ2': DTLZ2,
+        'DTLZ3': DTLZ3,
+    }
 
-    rvea = RVEA(prob=problem, MaxFEs=30000, popsize=100)
-    X, F = rvea.run()
-    # print(X)
-    plot_NDS(PF, F)
-    ind = GD(problem1.pareto_front())
-    print(ind(F))
-    # print(X)
+    M = 10 # 独立运行次数
+    n_var = 10
+    n_obj = 3
+
+    refpoint = np.array([2 * i + 1 for i in range(1, n_obj+1)])
+    ind = HV(ref_point=refpoint)
+
+
+    
+    ex_time = 0
+    for k, fname in enumerate(p_dct):
+
+        problem = p_dct[fname](n_var=10, n_obj=3)
+        hv_lst = []
+        igd_lst = []
+        start = time.time()
+        for i in range(M):
+            alg = RVEA(problem, 100, 1e5)
+            X, F = alg.run()
+            hv = ind(F)
+            igd = IGD(problem.pareto_front())
+            igd_lst.append(igd(F))
+            hv_lst.append(hv/np.prod(refpoint))
+        
+        end = time.time()
+        t = (end - start)/M
+        ex_time += t
+        print(f"RVEA 算法在问题{fname}上10次独立实验目标值HV结果: mean(std)={np.mean(hv_lst):.2e}({np.std(hv_lst):.2e})")
+        print(f"RVEA 算法在问题{fname}上10次独立实验目标值IGD结果: mean(std)={np.mean(igd_lst):.2e}({np.std(igd_lst):.2e})")
+        print(f"运行时间： {t:.2f} s")
+    
+    print("实验结束！")
+    print(f"平均运行时间： {ex_time:.2f} s")

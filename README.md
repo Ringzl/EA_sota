@@ -1,6 +1,6 @@
 ### 连续优化 (单目标)
 * **测试问题**： 
-Single Objective Bound Constrained Real-Parameter Numerical Optimisation, IEEE Congress on Evolutionary Computation (CEC) 2022. (F1 - F12) 中  "F2", "F4",  "F6", "F7", "F8", "F9", "F12" 问题
+Single Objective Bound Constrained Real-Parameter Numerical Optimisation, IEEE Congress on Evolutionary Computation (CEC) 2022. (F1 - F12) 中  "F2", "F4",  "F6", "F7", "F8", "F9", "F12" 问题 (d = 10维)
 <div align="center">
 <img src="https://s2.loli.net/2024/05/30/uCywdQxskqYPv91.png" width="600" />
 </div>
@@ -44,7 +44,7 @@ Single Objective Bound Constrained Real-Parameter Numerical Optimisation, IEEE C
 ### 连续约束优化 (单目标)
 
 * **测试问题**：
-Problem Definitions and Evaluation Criteria for the CEC 2017 Competition on Constrained Real- Parameter Optimization（C01-C28） 节选 C01 - C05
+Problem Definitions and Evaluation Criteria for the CEC 2017 Competition on Constrained Real- Parameter Optimization（C01-C28） 节选 C01 - C05 (d = 10维)
 <div align="center">
 <img src="https://s2.loli.net/2024/05/31/9PuDtTFxJ1VYGls.png" width="500" />
 </div>
@@ -82,7 +82,7 @@ Problem Definitions and Evaluation Criteria for the CEC 2017 Competition on Cons
 
 ### 连续多目标优化
 
-* **测试问题** : WFG1-9 （节选WFG1 和 WFG4 进行测试）
+* **测试问题** : WFG1-9 （节选WFG1 和 WFG4 进行测试, d = 10维, n_obj=3）
 <div align="center">
 <img src="https://s2.loli.net/2024/06/03/btlQ9fiqvjws8VI.png" width="500" />
 </div>
@@ -96,8 +96,29 @@ Problem Definitions and Evaluation Criteria for the CEC 2017 Competition on Cons
 
 * **测试结果**
 
+  * 评估指标： HV, reference point $y^* = \{3, 5, ..., 2M+1\}$
 
-**观点**：
+  * HV指标结果
+
+  | 算法/问题     | WFG1               | WFG4               | DTLZ2              | DTLZ3              |
+  |:---------:|:------------------:|:------------------:|:------------------:|:------------------:|
+  | NSGA-II   | 5.66e-01(3.86e-02) | 6.58e-01(7.80e-03) | 9.89e-01(3.46e-03) | 9.89e-01(4.85e-03) |
+  | IBEA      | 8.06e-01(4.27e-02) | 7.29e-01(5.98e-04) | 9.94e-01(2.13e-05) | 9.90e-01(2.49e-05) |
+  | MOEA/D    | 4.76e-01(3.69e-02) | 7.10e-01(1.89e-03) | 9.94e-01(3.56e-06) | 9.40e-01(1.63e-01) |
+  | RVEA      | 3.77e-01(2.00e-01) | 7.29e-01(3.94e-04) | 9.94e-01(1.02e-07) | 9.94e-01(1.74e-05) |
+  | Two_arch2 | **8.63e-01(5.71e-02)** | **7.30e-01(1.03e-03)** | 9.94e-01(8.01e-06) | 9.94e-01(1.35e-05) |
+
+  * 运行时间
+
+  | 算法/问题 | 运行时间 |
+  |--------------------|----|
+  | NSGA-II  |   10.27 s + 9.65 s |
+  | IBEA     |   189.56 s + 197.18 s  |
+  | MOEA/D   |   37.49 s + 30.97 s |
+  | Two_arch2|   1187.71 s  |
+  | RVEA     |   2.30 s + 2.60 s  |
+
+**观点**： Two_arch2 在所有问题上表现最好，但是运行时间最长， RVEA 运行效率最高，但是在WFG1上问题表现不好。综合来看IBEA相对不错。（需要结合具体需求进行选择）
 
 
 ---

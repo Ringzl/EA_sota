@@ -118,7 +118,7 @@ class IBEA(object):
                 )
                 ** (1 / (self.disM + 1))
         )
-
+        Offspring = np.clip(Offspring, self.xmin, self.xmax)
         return Offspring
 
     # 计算I指标作为适应度值
@@ -214,8 +214,8 @@ if __name__ == "__main__":
     # print(igd(F))
     # plot_NDS(problem.pareto_front(), F)
     p_dct = {
-        # 'WFG1': WFG1,   
-        # 'WFG4': WFG4
+        'WFG1': WFG1,   
+        'WFG4': WFG4,
         'DTLZ2': DTLZ2,
         'DTLZ3': DTLZ3
     }

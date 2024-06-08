@@ -11,12 +11,172 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 from pymoo.indicators.igd import IGD
-# from pymoo.indicators.igd_plus import IGDPlus
+from pymoo.indicators.igd_plus import IGDPlus
 
 import warnings
 warnings.filterwarnings("ignore")
 from pymoo.config import Config
 Config.warnings['not_compiled'] = False
+
+
+# 判断支配关系：p支配q，返回1
+def is_dominated(p, q):
+    if (np.any(p > q)):
+        return 0
+    elif (np.all(p == q)):
+        return 0
+    else:
+        return 1
+
+# 快速非支配排序
+def fast_nds(objv):
+    '''
+    F: 每一级个体的索引 
+    rank_lst: 对应个体的废止配等级
+    '''
+    size = len(objv)
+    sp_lst = [[] for i in range(size)]
+    F = [[]]
+    np_lst = [0 for i in range(size)]
+    rank_lst = np.zeros(size).astype(int)  # 保存每个个体所处支配层
+
+    # 寻找pareto第一级个体
+    for p in range(0, size):
+        sp_lst[p] = []
+        np_lst[p] = 0
+        for q in range(0, size):
+            if (p != q):
+                if (is_dominated(objv[p], objv[q])):  # pop[i] 支配 pop[j],添加至sp_lst[i]
+                    if (q not in sp_lst):
+                        sp_lst[p].append(q)
+                elif (is_dominated(objv[q], objv[p])):
+                    np_lst[p] = np_lst[p] + 1
+
+        if (np_lst[p] == 0):
+            rank_lst[p] = 1  # np为0，个体为pareto第一级
+            if p not in F[0]:
+                F[0].append(p)
+    i = 1
+    while (F[i - 1] != []):
+        Q = []
+        for p in F[i - 1]:
+            for j in sp_lst[p]:
+                np_lst[j] -= 1
+                if (np_lst[j] == 0):
+                    rank_lst[j] = i + 1
+                    if j not in Q:
+                        Q.append(j)
+        i = i + 1
+        F.append(Q)
+    return rank_lst, F 
+
+# Use efficient non-dominated sort with sequential search (ENS-SS)
+def ENS_SS(pop_obj, nSort):
+    # 目标值重复的个体不参与非支配排序
+    objv, _, Loc = np.unique(
+        pop_obj, return_index=True, return_inverse=True, axis=0
+    )
+    Table, _ = np.histogram(Loc, bins=np.arange(0, np.max(Loc) + 2))
+    N, M = objv.shape
+    FrontNo = np.full(N, np.inf)
+    MaxFNo  = -1
+
+    # 对全部个体进行非支配排序
+    while np.sum(Table[FrontNo < np.inf]) < min(nSort, len(Loc)):
+        MaxFNo += 1
+        for i in range(N):
+            if FrontNo[i] == np.inf:
+                dominated = False
+                for j in range(i - 1, -1, -1):
+                    if FrontNo[j] == MaxFNo:
+                        m = 1
+                        while m < M and objv[i, m] >= objv[j, m]:
+                            m += 1
+                        dominated = m >= M
+                        if dominated or M == 2:
+                            break
+                if not dominated:
+                    FrontNo[i] = MaxFNo
+    FrontNo = FrontNo[Loc]
+    return [FrontNo, MaxFNo]
+
+# Use tree-based efficient non-dominated sort (T-ENS)
+def T_ENS(pop_obj, nSort):
+    # 目标值重复的个体不参与非支配排序
+    objv, _, Loc = np.unique(
+        pop_obj, return_index=True, return_inverse=True, axis=0
+    )
+    Table, _ = np.histogram(Loc, bins=np.arange(0, np.max(Loc) + 2))
+    N, M = objv.shape
+    FrontNo = np.full(N, np.inf)
+    MaxFNo  = -1
+
+    Forest = np.full(N, np.inf)
+    Children = np.zeros((N, M-1))
+    LeftChild = np.zeros(N) + M
+    Father = np.zeros(N)
+    Brother = np.zeros(N) + M
+
+    ORank = np.argsort(-pop_obj[:, 1:M], axis=1)
+    ORank += 1
+
+    while np.sum(Table[FrontNo < np.inf]) < min(nSort, len(Loc)):
+        MaxFNo += 1
+        root = np.where(FrontNo == np.inf)[0][0]
+        Forest[MaxFNo] = root
+        FrontNo[root] = MaxFNo
+        for p in range(N):
+            if FrontNo[p] == np.inf:
+                Pruning = np.zeros(N)
+                q = Forest[MaxFNo]
+            while True:
+                m = 0
+                while m < M and pop_obj[p, ORank[q,m]] >= pop_obj[q, ORank[q,m]]:
+                    m+=1
+                if m == M-1:
+                    break
+                else:
+                    Pruning[q] = m
+                    if LeftChild[q] <= Pruning[q]:
+                        q = Children[q, LeftChild[q]]
+                    else:
+                        while Father[q] and Brother[q] > Pruning[Father[q]]:
+                            q = Father[q]
+                        if Father[q]:
+                            q = Children[Father[q], Brother[q]]
+                        else:
+                            break
+            if m < M-1:
+                FrontNo[p] = MaxFNo
+                q = Forest[MaxFNo]
+                while Children[q, Pruning[q]]:
+                    q = Children[q, Pruning[q]]
+                Children[q, Pruning[q]] = p
+                Father[p] = q
+
+                if LeftChild[q] > Pruning[q]:
+                    Brother[p] = LeftChild[q]
+                    LeftChild[q] = Pruning[q]
+                else:
+                    bro = Children[q, LeftChild[q]]
+                    while Brother[bro] < Pruning[q]:
+                        bro = Children[q, Brother[bro]]
+                    Brother[p] = Brother[bro]
+                    Brother[bro] = Pruning[q]
+    FrontNo = FrontNo[:, Loc]
+    return FrontNo, MaxFNo
+
+
+# 进行K-锦标赛选择， args 输入objv，或rank
+def tournament_selection(K, N, *args):
+    for i in range(len(args)):
+        args[i].reshape(1, -1)
+    fitness = np.vstack(args)
+    _, rank = np.unique(fitness, return_inverse=True, axis=1)
+    parents = np.random.randint(low=0, high=len(rank), size=(N, K))
+    best = np.argmin(rank[parents], axis=1)
+    index = parents[np.arange(N), best]
+    return index
 
 class Pop(object):
     def __init__(self, X):
@@ -30,6 +190,7 @@ class Pop(object):
         newp.ObjV = ObjV
         return newp
 
+
 class NSGA2(object):
     def __init__(self, prob, popsize, MaxFEs):
         self.MaxFEs = MaxFEs
@@ -40,11 +201,6 @@ class NSGA2(object):
         self.xmax = prob.bounds()[1]
         self.func = prob.evaluate
         self.m = prob.n_obj
-
-        self.proC = 1
-        self.disC = 20
-        self.proM = 1
-        self.disM = 20
 
         self.pop = None
         self.FEs = 0
@@ -63,6 +219,13 @@ class NSGA2(object):
         self.FEs = self.popsize
 
     def reproduction(self, X):
+        
+        # 实数编码的遗传算法
+        proC = 1
+        disC = 20
+        proM = 1
+        disM = 20
+
         X1 = X[0: math.floor(X.shape[0] / 2), :]
         X2 = X[math.floor(X.shape[0] / 2): math.floor(X.shape[0] / 2) * 2, :]
         N = X1.shape[0]
@@ -70,11 +233,11 @@ class NSGA2(object):
 
         beta = np.zeros((N, D))
         mu = np.random.random((N, D))
-        beta[mu <= 0.5] = (2 * mu[mu <= 0.5]) ** (1 / (self.disC + 1))
-        beta[mu > 0.5] = (2 - 2 * mu[mu > 0.5]) ** (-1 / (self.disC + 1))
+        beta[mu <= 0.5] = (2 * mu[mu <= 0.5]) ** (1 / (disC + 1))
+        beta[mu > 0.5] = (2 - 2 * mu[mu > 0.5]) ** (-1 / (disC + 1))
         beta = beta * (-1) ** np.random.randint(0, 2, (N, D))
         beta[np.random.random((N, D)) < 0.5] = 1
-        beta[np.tile(np.random.random((N, 1)) > self.proC, (1, D))] = 1
+        beta[np.tile(np.random.random((N, 1)) > proC, (1, D))] = 1
         Offspring = np.vstack(
             (
                 (X1 + X2) / 2 + beta * (X1 - X2) / 2,
@@ -83,7 +246,7 @@ class NSGA2(object):
         )
         Lower = np.tile(self.xmin, (2 * N, 1))
         Upper = np.tile(self.xmax, (2 * N, 1))
-        Site = np.random.random((2 * N, D)) < self.proM / D
+        Site = np.random.random((2 * N, D)) < proM / D
         mu = np.random.random((2 * N, D))
         temp = np.logical_and(Site, mu <= 0.5)
         Offspring = np.minimum(np.maximum(Offspring, Lower), Upper)
@@ -95,9 +258,9 @@ class NSGA2(object):
                                 1
                                 - (Offspring[temp] - Lower[temp]) / (Upper[temp] - Lower[temp])  # noqa
                         )
-                        ** (self.disM + 1)
+                        ** (disM + 1)
                 )
-                ** (1 / (self.disM + 1))
+                ** (1 / (disM + 1))
                 - 1
         )  # noqa
         temp = np.logical_and(Site, mu > 0.5)  # noqa: E510
@@ -111,202 +274,84 @@ class NSGA2(object):
                                 1
                                 - (Upper[temp] - Offspring[temp]) / (Upper[temp] - Lower[temp])  # noqa
                         )
-                        ** (self.disM + 1)
+                        ** (disM + 1)
                 )
-                ** (1 / (self.disM + 1))
+                ** (1 / (disM + 1))
         )
-
+        Offspring = np.clip(Offspring, self.xmin, self.xmax)
         return Offspring
 
-    # 判断支配关系：p支配q，返回1
-    def is_dominated(self, p, q):
-        if (np.any(p > q)):
-            return 0
-        elif (np.all(p == q)):
-            return 0
-        else:
-            return 1
-
-    # 快速非支配排序
-    def fast_nds(self, pop):
-        popsize = pop.X.shape[0]
-        sp_lst = [[] for i in range(popsize)]
-        F = [[]]
-        np_lst = [0 for i in range(popsize)]
-        rank_lst = np.zeros(popsize).astype(int)  # 保存每个个体所处支配层
-
-        # 寻找pareto第一级个体
-        for p in range(0, popsize):
-            sp_lst[p] = []
-            np_lst[p] = 0
-            for q in range(0, popsize):
-                if (p != q):
-                    if (self.is_dominated(pop.ObjV[p], pop.ObjV[q])):  # pop[i] 支配 pop[j],添加至sp_lst[i]
-                        if (q not in sp_lst):
-                            sp_lst[p].append(q)
-                    elif (self.is_dominated(pop.ObjV[q], pop.ObjV[p])):
-                        np_lst[p] = np_lst[p] + 1
-
-            if (np_lst[p] == 0):
-                rank_lst[p] = 1  # np为0，个体为pareto第一级
-                if p not in F[0]:
-                    F[0].append(p)
-        i = 1
-        while (F[i - 1] != []):
-            Q = []
-            for p in F[i - 1]:
-                for j in sp_lst[p]:
-                    np_lst[j] -= 1
-                    if (np_lst[j] == 0):
-                        rank_lst[j] = i + 1
-                        if j not in Q:
-                            Q.append(j)
-            i = i + 1
-            F.append(Q)
-        return F, rank_lst
-
-
     def eff_nds(self, pop):
-
-        #Use efficient non-dominated sort with sequential search (ENS-SS)
-        def ENS_SS(pop_obj):
-            # Use efficient non-dominated sort with sequential search (ENS-SS)
-            nsort = pop_obj.shape[0]
-            # 目标值重复的个体不参与非支配排序
-            objv, index, ind = np.unique(
-                pop_obj, return_index=True, return_inverse=True, axis=0
-            )
-            count, M = objv.shape
-            frontno = np.full(count, np.inf)
-            maxfront = 0
-            # 对全部个体进行非支配排序
-            Table, _ = np.histogram(ind, bins=np.arange(0, np.max(ind) + 2))
-            while np.sum(Table[frontno < np.inf]) < np.min((nsort, len(ind))):
-                maxfront += 1
-                for i in range(count):
-                    if frontno[i] == np.inf:
-                        dominate = False
-                        for j in range(i - 1, -1, -1):
-                            if frontno[j] == maxfront:
-                                m = 1
-                                while m < M and objv[i][m] >= objv[j][m]:
-                                    m += 1
-                                dominate = m == M
-                                if dominate or M == 2:
-                                    break
-                        if not dominate:
-                            frontno[i] = maxfront
-            frontno = frontno[ind]
-            return [frontno, maxfront]
-
-        #  Use tree-based efficient non-dominated sort (T-ENS)
-        def  T_ENS(objv):
-            pass
-
         N, M = pop.ObjV.shape
+
         if M < 3 or N < 500 :
-            FrontNo, MaxFNo = ENS_SS(pop.ObjV)  #ENS-SS
+            FrontNo, MaxFNo = ENS_SS(pop.ObjV, self.popsize)  #ENS-SS
         else:
-            FrontNo, MaxFNo = T_ENS(pop.ObjV)  #T-ENS
+            FrontNo, MaxFNo = T_ENS(pop.ObjV, self.popsize)  #T-ENS
 
-        return MaxFNo, FrontNo
+        return FrontNo, MaxFNo
 
-    def crowded_distance(self, Fi, pop):
-        l = len(Fi)
-        m = pop.ObjV.shape[1]
+    def crowded_distance(self, pop_obj,FrontNo):
+        N, M = pop_obj.shape
+        CrowdDis = np.zeros(N)
+        Fronts = np.unique(FrontNo[FrontNo != np.inf])
 
-        Fi = np.array(Fi).astype(int)
-        distI = np.zeros(l)  # 对应Fi上的位置
-        for i in range(m):
-            sortFinds = np.argsort(pop.ObjV[Fi, i])  # l个个体在fm上的排序
-            distI[sortFinds[0]] = np.inf
-            distI[sortFinds[-1]] = np.inf
-            for j in range(1, l - 1):
-                distI[sortFinds[j]] += (pop.ObjV[Fi[sortFinds[j + 1]], i] - pop.ObjV[Fi[sortFinds[j - 1]], i]) / (
-                        np.max(pop.ObjV[:, i]) - np.min(pop.ObjV[:, i]))
-        return distI
+        for f in range(len(Fronts)):
+            Front = np.where(FrontNo == Fronts[f])[0]
+            Fmax = np.max(pop_obj[Front, :], axis=0)
+            Fmin = np.min(pop_obj[Front, :], axis=0)
+            for i in range(M):
+                Rank = np.argsort(pop_obj[Front, i])
+                CrowdDis[Front[Rank[0]]] = np.inf
+                CrowdDis[Front[Rank[-1]]] = np.inf
+                for j in range(1,len(Front)-1):
+                    CrowdDis[Front[Rank[j]]] += (pop_obj[Front[Rank[j+1]], i] - pop_obj[Front[Rank[j-1]], i])/(Fmax[i] - Fmin[i])
+        return CrowdDis    
+    
 
-    # 进行K-锦标赛选择， args 输入objv，或rank
-    def tournament_selection(self, K, N, *args):
-        for i in range(len(args)):
-            args[i].reshape(1, -1)
-        fitness = np.vstack(args)
-        _, rank = np.unique(fitness, return_inverse=True, axis=1)
-        parents = np.random.randint(low=0, high=len(rank), size=(N, K))
-        best = np.argmin(rank[parents], axis=1)
-        index = parents[np.arange(N), best]
-        return index
-
-    def rm_dup(self, cpop):
-        uy, uindx = np.unique(cpop.ObjV, axis=0, return_index=True)
-        uX = cpop.X[uindx]
-        cpop.X = uX
-        cpop.ObjV = uy
-
-
-    def environment_selection(self, pop):
+    def environment_selection(self, pop, N):
         # 非支配排序
-        _, frontno =  self.eff_nds(pop) # self.fast_nds(pop) #
+        # FrontNo, _ = fast_nds(pop)
+        FrontNo, MaxFNo =  self.eff_nds(pop) 
+        Next = FrontNo < MaxFNo
 
         # 计算拥挤度距离
-        Next = []
-        nextfrontNO = np.zeros(self.popsize).astype(int)
-        nextcd = np.zeros(self.popsize)
+        CrowdDis = self.crowded_distance(pop.ObjV, FrontNo)
 
-        i, c = 1, 0
-        Fi = np.where(frontno == 1)[0]
-        while (c + len(Fi) < self.popsize):
-            Next.extend(Fi.tolist())
-            nextfrontNO[c:c + len(Fi)] = i
-            nextcd[c:c + len(Fi)] = self.crowded_distance(Fi, pop)
-            c += len(Fi)
-            i += 1
-            Fi = np.where(frontno == i)[0]
+        # 基于拥挤度距离选择最后一层的个体
+        Last = np.where(FrontNo == MaxFNo)[0]
+        Rank = np.argsort(-CrowdDis[Last])
+        Next[Last[Rank[:N-np.sum(Next)]]] = True
 
-        # 最后一层根据cd选
-        lastcd = self.crowded_distance(Fi, pop)
-        slinds = lastcd.argsort()[::-1]
-        Next.extend(Fi[slinds[:self.popsize - c]].tolist())
-        nextfrontNO[c:] = i
-        nextcd[c:] = lastcd[slinds[:self.popsize - c]]
+        # 更新下一代种群
+        self.pop.X = pop.X[Next]
+        self.pop.ObjV = pop.ObjV[Next]
 
+        FrontNo = FrontNo[Next]
+        CrowdDis = CrowdDis[Next]
 
-        return Next, nextfrontNO, nextcd
+        return FrontNo, CrowdDis
 
 
     def run(self):
         self.initPop()
-
-        Next, frontno, cd = self.environment_selection(self.pop)
-        # 更新
-        self.pop.X = self.pop.X[Next]
-        self.pop.ObjV = self.pop.ObjV[Next]
+        FrontNo,CrowdDis = self.environment_selection(self.pop, self.popsize)
 
         while(self.FEs < self.MaxFEs):
-            # print(self.FEs)
             # 锦标赛选择
-            bts_inds = self.tournament_selection(2, self.popsize, frontno, -cd)
-            self.pop.X = self.pop.X[bts_inds]
-            self.pop.ObjV = self.pop.ObjV[bts_inds]
-
+            index = tournament_selection(2, self.popsize, FrontNo, -CrowdDis)
+            parentx = self.pop.X[index]
             # 生成子代
-            newX = self.reproduction(self.pop.X)
+            newX = self.reproduction(parentx)
             newf = self.func(newX)
-            self.FEs += newf.shape[0]
-            allX = np.vstack([self.pop.X, newX])
-            cpop = Pop(allX)
+            self.FEs += len(newf)
+            cpop = Pop(np.vstack([self.pop.X, newX]))
             cpop.ObjV = np.vstack([self.pop.ObjV, newf])
 
-            # 去除重复样本
-            # self.rm_dup(cpop)
+            FrontNo,CrowdDis = self.environment_selection(cpop, self.popsize)
 
-            Next, frontno, cd = self.environment_selection(cpop)
-
-            self.pop.X = cpop.X[Next]
-            self.pop.ObjV = cpop.ObjV[Next]
-
-        _, frontno = self.eff_nds(self.pop)
-        indxs = np.where(frontno == 1)[0]
+        frontno, _ = self.eff_nds(self.pop)
+        indxs = np.where(frontno == 0)[0]
         bX = self.pop.X[indxs]
         bf = self.pop.ObjV[indxs]
 
@@ -338,14 +383,14 @@ def plot_NDS(PF, F):
 if __name__ == "__main__":
     # problem = ZDT1(n_var=10)
     # nsga = NSGA2(problem, 100, 1e5)
-    # igd = IGD(problem.pareto_front())
+    # igd = IGD(problem.pareto_front()) # IGD
     # X, F = nsga.run()
     # print(igd(F))
     # plot_NDS(problem.pareto_front(), F)
 
     p_dct = {
-        # 'WFG1': WFG1,   
-        # 'WFG4': WFG4
+        'WFG1': WFG1,   
+        'WFG4': WFG4,
         'DTLZ2': DTLZ2,
         'DTLZ3': DTLZ3
     }
@@ -373,7 +418,6 @@ if __name__ == "__main__":
             igd = IGD(problem.pareto_front())
             igd_lst.append(igd(F))
             hv_lst.append(hv/np.prod(refpoint))
-        
         end = time.time()
         t = (end - start)/M
         ex_time += t

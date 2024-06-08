@@ -264,7 +264,7 @@ class TA2(object):
                 )
                 ** (1 / (disM + 1))
         )
-
+        Offspring = np.clip(Offspring, self.xmin, self.xmax)
         return Offspring
 
 
@@ -322,10 +322,10 @@ if __name__ == "__main__":
     # plot_NDS(problem.pareto_front(), F)
 
     p_dct = {
-        # 'DTLZ2': DTLZ2,
-        # 'DTLZ3': DTLZ3,
         'WFG1': WFG1,   
-        # 'WFG4': WFG4
+        'WFG4': WFG4,
+        'DTLZ2': DTLZ2,
+        'DTLZ3': DTLZ3
     }
 
     M = 10 # 独立运行次数
@@ -345,7 +345,6 @@ if __name__ == "__main__":
         for i in range(M):
             alg = TA2(problem, 100, 1e5)
             X, F = alg.run()
-            print(np.any(np.isnan(F)))
             hv = ind(F)
             igd = IGD(problem.pareto_front())
             igd_lst.append(igd(F))

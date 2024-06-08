@@ -182,7 +182,7 @@ class MOEAD(object):
                 )
                 ** (1 / (self.disM + 1))
         )
-
+        Offspring = np.clip(Offspring, self.xmin, self.xmax)
         return Offspring
 
     def Tchebycheff_norm(self, Bi, newf):
@@ -208,12 +208,13 @@ class MOEAD(object):
                 newf = self.func(newX)
                 self.FEs += newX.shape[0]
 
+
                 # 更新ideal point
                 self.z = np.minimum(self.z, newf)
 
                 # 更新 neighbors
                 g_old, g_new = self.Tchebycheff_norm(self.B[k], newf)
-                repindxs = self.B[k, g_old > g_new]
+                repindxs = self.B[k, g_old >= g_new]
                 self.pop.X[repindxs] = newX
                 self.pop.ObjV[repindxs] = newf
 
@@ -244,15 +245,16 @@ def plot_NDS(PF, F):
     plt.show()
 
 if __name__ == "__main__":
-    # problem = ZDT1(n_var=10)
+    # problem = WFG1(n_var=10, n_obj=3)
     # moead = MOEAD(problem, 100, 1e5)
     # igd = IGD(problem.pareto_front())
     # X, F = moead.run()
     # print(igd(F))
     # plot_NDS(problem.pareto_front(), F)
+    
     p_dct = {
-        # 'WFG1': WFG1,   
-        # 'WFG4': WFG4
+        'WFG1': WFG1,   
+        'WFG4': WFG4,
         'DTLZ2': DTLZ2,
         'DTLZ3': DTLZ3,
     }

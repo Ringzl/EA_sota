@@ -177,7 +177,7 @@ class RVEA(object):
                 )
                 ** (1 / (self.disM + 1))
         )
-
+        Offspring = np.clip(Offspring, self.xmin, self.xmax)
         return Offspring
 
     # Reference Vector-Guided Selection Strategy
@@ -263,7 +263,7 @@ def plot_NDS(PF, F):
     plt.show()
 
 if __name__ == "__main__":
-    # problem = ZDT1(n_var=10)
+    # problem = ZDT1(n_var=10) #, n_obj=3
     # rvea = RVEA(problem, 100, 1e5)
     # igd = IGD(problem.pareto_front())
     # X, F = rvea.run()
@@ -271,8 +271,8 @@ if __name__ == "__main__":
     # plot_NDS(problem.pareto_front(), F)
 
     p_dct = {
-        # 'WFG1': WFG1,   
-        # 'WFG4': WFG4
+        'WFG1': WFG1,   
+        'WFG4': WFG4,
         'DTLZ2': DTLZ2,
         'DTLZ3': DTLZ3,
     }

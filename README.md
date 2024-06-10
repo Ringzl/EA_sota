@@ -105,7 +105,7 @@ Problem Definitions and Evaluation Criteria for the CEC 2017 Competition on Cons
   | NSGA-II   | 7.50e-01(5.88e-02) | 7.10e-01(2.08e-03) | 9.94e-01(6.21e-05) | 9.94e-01(6.48e-05) |
   | IBEA      | 7.05e-01(8.55e-02) | 7.30e-01(6.97e-04) | 9.94e-01(9.87e-06) | 9.90e-01(8.90e-06) |
   | MOEA/D    | 8.38e-01(5.91e-02) | 7.11e-01(1.19e-03) | 9.94e-01(1.35e-06) |9.94e-01(1.03e-05) |
-  | RVEA      | 7.25e-01(5.56e-02) | 7.29e-01(3.46e-04) | 9.94e-01(1.29e-07) | 9.94e-01(2.19e-05) |
+  | RVEA      | 7.54e-01(4.37e-02) | 7.29e-01(5.99e-04) | 9.94e-01(1.29e-07) | 9.94e-01(2.19e-05) |
   | Two_arch2 | **8.71e-01(5.07e-02)** | **7.31e-01(7.81e-04)** | 9.94e-01(9.50e-06) | 9.94e-01(1.53e-05) |
 
   * 运行时间
@@ -125,30 +125,40 @@ Problem Definitions and Evaluation Criteria for the CEC 2017 Competition on Cons
 
 ### 组合优化
 
+#### TSP问题
+
+<div align="center">
+<img src="https://s2.loli.net/2024/06/10/cbNQw4GWUELCtzD.png" width="500" />
+</div>
+
 * **测试算法**
   TSP问题数学建模 (MTZ)：
 
-    $$
-    min \sum_{i \in V}\sum_{j \in V} c_{ij} x_{ij} \\
-    s.t. \sum_{j \in V} x_{ij} = 1, \forall i \in V, \\
-    \sum_{i \in V} x_{ij} = 1, \forall j \in V, \\
-    u_i - u_j + Nx_{ij} \leq N-1, \forall ij \in V-\{1\}\\
-    x_{ij} \in \{0,1\}, \forall i,j \in V, \\
-    u_i \in R_+^0, \forall i \in V
-    $$
+  $$
+  min \sum_{i \in V}\sum_{j \in V} c_{ij} x_{ij} \\
+  s.t. \sum_{j \in V} x_{ij} = 1, \forall i \in V, \\
+  \sum_{i \in V} x_{ij} = 1, \forall j \in V, \\
+  u_i - u_j + Nx_{ij} \leq N-1, \forall ij \in V-\{1\}\\
+  x_{ij} \in \{0,1\}, \forall i,j \in V, \\
+  u_i \in R_+^0, \forall i \in V
+  $$
 
-    * Miller-Tucker-Zemlin formulation（MTZ建模） 
-    对于赋权图$G=(V,E)$, $V=\{1,...,N\}$为顶点集, $E$为边集, $x_{ij}$为表示从i访问j的弧是否被选择。
-    约束条件：
-      * 每个城市只访问一次（约束1和约束2）
-      * 消除子回路（约束3） 
+  * Miller-Tucker-Zemlin formulation（MTZ建模） 
+
+  对于赋权图$G=(V,E)$, $V=\{1,...,N\}$为顶点集, $E$为边集, $x_{ij}$为表示从i访问j的弧是否被选择。
+  约束条件：
+
+  * 每个城市只访问一次（约束1和约束2）
+  * 消除子回路（约束3） 
+  
+  MTZ约束消除子环路：
+
+  $$
+  u_i - u_j + Nx_{ij} \leq N-1, \forall i,j \in V-{1}, i\neq j \\
+  u_i \geq 0, \forall i \in V
+  $$
     
-    * MTZ约束消除子环路：
-      $$
-      u_i - u_j + Nx_{ij} \leq N-1, \forall i,j \in V-{1}, i\neq j \\
-      u_i \geq 0, \forall i \in V
-      $$
-      起点{1}除外，$u_i$为辅助变量，无实际意义。
+  起点{1}除外，$u_i$为辅助变量，无实际意义。
 
   * **pyomo+SCIP**
   * **pyomo+Gurobi**
@@ -157,7 +167,7 @@ Problem Definitions and Evaluation Criteria for the CEC 2017 Competition on Cons
   * **ALNS**
 
 
-* **TSP问题**
+
 
 
 * **CVRP问题**

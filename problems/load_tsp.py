@@ -31,7 +31,7 @@ class TSP:
             for j in range(0,self.size):
                 if i == j:
                     # 相同城市不允许访问
-                    dist[i][j] = 1000000
+                    dist[i][j] = np.inf
                 else:
                     dist[i][j] = np.sqrt((self.tmap[i][0]-self.tmap[j][0])**2 + (self.tmap[i][1]-self.tmap[j][1])**2)
         return dist

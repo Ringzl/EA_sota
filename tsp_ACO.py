@@ -1,5 +1,7 @@
 import numpy as np
 from problems.load_tsp import TSP
+from problems.plot_tsp import plot_path
+import time
 
 class ACO:
     def __init__(self, prob, ant_cnt=100, max_iter=200):
@@ -83,7 +85,7 @@ class ACO:
             # 信息素更新
             self.tau = (1 - self.rho) * self.tau + delta_tau
 
-            print('iter: {}, best_f: {}'.format(i, self.generation_best_y[-1]))
+            # print('iter: {}, best_f: {}'.format(i, self.generation_best_y[-1]))
 
         # 最优解位置
         best_generation_index = np.array(self.generation_best_y).argmin()
@@ -91,10 +93,50 @@ class ACO:
         return self.generation_best_x[best_generation_index], self.generation_best_y[best_generation_index]
 
 if __name__ == "__main__":
-    fpath = "/home/yongcun/work/optimize/ec/problems/TSP/ch130.txt"
-    prob = TSP(fpath)
-    aco = ACO(prob=prob, ant_cnt=100, max_iter=200)
-    route, cost = aco.run()
-    print(route, cost)
+    # 问题
+    # fpath = "/home/yongcun/work/optimize/ec/problems/TSP/berlin52.tsp"
+    # prob = TSP(fpath)
+    # pos_dct =  dict(zip(list(range(prob.size)), prob.tmap))
+    # # 优化
+    # start = time.time()
+    # aco = ACO(prob=prob, ant_cnt=50, max_iter=100)
+    # route, cost = aco.run()
+    # end = time.time()
+    # print(f"最优解是：{cost:.2f}, 运行时间： {end-start:.2f} s")
+    # edges = list(zip(route[:-1], route[1:]))
+    # edges.append((route[-1], route[0]))
+    # plot_path(edges, pos_dct)
+
+
+    p_lst = [
+        'berlin52', 'ch130', 'd198', 'd493',
+        'd657', 
+        # 'd1291'
+    ]
+    M = 5
+    for p in p_lst:
+        # 问题
+        fpath = f"/home/yongcun/work/optimize/ec/problems/TSP/{p}.tsp"
+        print(f"问题： {p}")
+        prob = TSP(fpath)
+        pos_dct =  dict(zip(list(range(prob.size)), prob.tmap))
+        # print(prob.size, prob.dist.shape)
+
+        c_lst, t_lst = [], []
+        for t in range(M):
+            # 优化
+            start = time.time()
+            aco = ACO(prob=prob, ant_cnt=50, max_iter=100)
+            route, cost = aco.run()
+            end = time.time()
+            c_lst.append(cost)
+            t_lst.append(end-start)
+            # print(f"最优解是：{cost:.2f}, 运行时间： {end-start:.2f} s")
+            edges = list(zip(route[:-1], route[1:]))
+            edges.append((route[-1], route[0]))
+            # plot_path(edges,  pos_dct)
+        
+        print((f"最优解是：{np.mean(c_lst):.2f}±{np.std(c_lst):.2f}, 运行时间： {np.mean(t_lst):.2f} s"))
+
 
 

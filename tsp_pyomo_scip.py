@@ -1,7 +1,6 @@
 import time
 import pyomo.environ as pyo
 from problems.load_tsp import TSP
-
 from problems.plot_tsp import plot_path
 
 class TspOpt:
@@ -61,10 +60,18 @@ class TspOpt:
     def print_model(self):
         self.model.pprint()
 
-    def solve_model(self, solver_name):
+    def solve_model(self, solver_name, TIME_LIMIT):
         start = time.time()
         solver = pyo.SolverFactory(solver_name)
-        results = solver.solve(self.model)
+        if 'cplex' in solver_name:
+            solver.options['timelimit'] = TIME_LIMIT
+        elif 'glpk' in solver_name:         
+            solver.options['tmlim'] = TIME_LIMIT
+        elif 'gurobi' in solver_name:           
+            solver.options['TimeLimit'] = TIME_LIMIT
+        elif 'xpress' in solver_name:
+            solver.options['maxtime'] = TIME_LIMIT 
+        results = solver.solve(self.model, timelimit=TIME_LIMIT, tee=False)
         end = time.time()
         # print(results)
 
@@ -78,26 +85,25 @@ class TspOpt:
             return arcs
         except:
             print("模型不可行")
+            return []
     
-
 if __name__ == "__main__":
-    # # 问题
+    # 问题
     # fpath = "/home/yongcun/work/optimize/ec/problems/TSP/berlin52.tsp"
     # prob = TSP(fpath)
-    # pos_dct =  dict(zip(list(range(prob.size)), prob.tmap))
+    # pos_dct =  dict(zip(list(range(1, prob.size+1)), prob.tmap))
     # # print(prob.size, prob.dist.shape)
 
     # # 优化
     # opt = TspOpt(prob.dist, prob.size)
     # opt.create_model()
-    # edges = opt.solve_model('scip')  # gurobi_direct
+    # edges = opt.solve_model('gurobi_direct', TIME_LIMIT=10)  # gurobi_direct scip
     # plot_path(edges,  pos_dct)
-    
-   
-    
+     
     p_lst = [
         'berlin52', 'ch130', 'd198', 'd493',
-        'd657', 'd1291'
+        'd657', 
+        # 'd1291'
     ]
     
     for p in p_lst:
@@ -105,15 +111,11 @@ if __name__ == "__main__":
         fpath = f"/home/yongcun/work/optimize/ec/problems/TSP/{p}.tsp"
         print(f"问题： {p}")
         prob = TSP(fpath)
-        pos_dct =  dict(zip(list(range(prob.size)), prob.tmap))
+        pos_dct =  dict(zip(list(range(1, prob.size+1)), prob.tmap))
         # print(prob.size, prob.dist.shape)
-
+    
         # 优化
         opt = TspOpt(prob.dist, prob.size)
         opt.create_model()
-        edges = opt.solve_model('gurobi_direct')  # scip
-        plot_path(edges,  pos_dct)
-    
-
-
-
+        edges = opt.solve_model('gurobi_direct', 300)  # scip gurobi_direct
+        # plot_path(edges,  pos_dct)

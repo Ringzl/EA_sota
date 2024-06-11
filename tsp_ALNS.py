@@ -14,9 +14,11 @@ ALNS通过使用多种destroy和repair方法,
 
 import random
 import numpy as np
-from problems.load_tsp import TSP, CTSP
 import copy
+import time
 
+from problems.load_tsp import TSP
+from problems.plot_tsp import plot_path
 
 class ALNS:
     def __init__(self, prob, max_iter):
@@ -200,7 +202,6 @@ class ALNS:
                 self.x = new_x
                 self.cost = cost_new
                 if cost_new <= self.history_best_cost:
-                    print(cost_new)
                     # 测试解为历史最优解，更新历史最优解，并设置最高的算子得分
                     self.history_best_x = new_x
                     self.history_best_cost = cost_new
@@ -234,18 +235,62 @@ class ALNS:
 
             # 结束一轮迭代，重置模拟退火初始温度
             cur_iter += 1
-            print(
-                'cur_iter: {}, best_f: {}'.format(cur_iter, self.history_best_cost))
+            # print(
+            #     'cur_iter: {}, best_f: {}'.format(cur_iter, self.history_best_cost))
 
         return self.history_best_x, self.history_best_cost
 
 
 
 if __name__ == "__main__":
-    fpath = "/home/yongcun/work/optimize/ec/problems/TSP/ch130.txt"
-    prob = TSP(fpath)
-    # prob = CTSP()
-    alns = ALNS(prob=prob, max_iter=500)
-    route, cost = alns.run()
-    print(route, cost)
+
+    # 问题
+    # fpath = "/home/yongcun/work/optimize/ec/problems/TSP/berlin52.tsp"
+    # prob = TSP(fpath)
+    # pos_dct =  dict(zip(list(range(prob.size)), prob.tmap))
+    # # 优化
+    # start = time.time()
+    # alns = ALNS(prob=prob, max_iter=100)
+    # route, cost = alns.run()
+    # end = time.time()
+    # print(f"最优解是：{cost:.2f}, 运行时间： {end-start:.2f} s")
+    # edges = list(zip(route[:-1], route[1:]))
+    # edges.append((route[-1], route[0]))
+    # plot_path(edges, pos_dct)
+
+
+    p_lst = [
+        'berlin52', 'ch130', 'd198', 
+        'd493',
+        'd657', 
+        # 'd1291'
+    ]
+    M = 5
+    for p in p_lst:
+        # 问题
+        fpath = f"/home/yongcun/work/optimize/ec/problems/TSP/{p}.tsp"
+        print(f"问题： {p}")
+        prob = TSP(fpath)
+        pos_dct =  dict(zip(list(range(prob.size)), prob.tmap))
+        # print(prob.size, prob.dist.shape)
+
+        c_lst, t_lst = [], []
+        for t in range(M):
+            # 优化
+            start = time.time()
+            alns = ALNS(prob=prob, max_iter=100)
+            route, cost = alns.run()
+            end = time.time()
+            c_lst.append(cost)
+            t_lst.append(end-start)
+            # print(f"最优解是：{cost:.2f}, 运行时间： {end-start:.2f} s")
+            edges = list(zip(route[:-1], route[1:]))
+            edges.append((route[-1], route[0]))
+            # plot_path(edges,  pos_dct)
+        
+        print((f"最优解是：{np.mean(c_lst):.2f}±{np.std(c_lst):.2f}, 运行时间： {np.mean(t_lst):.2f} s"))
+
+    
+
+    
             

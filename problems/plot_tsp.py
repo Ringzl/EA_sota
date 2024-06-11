@@ -1,6 +1,6 @@
 import networkx as nx
 import matplotlib.pyplot as plt
-
+import time
 
 def plot_path(edges, pos_dct):
     # Create a graph
@@ -9,7 +9,7 @@ def plot_path(edges, pos_dct):
     G.add_edges_from(edges)
 
     # Calculate the positions of the nodes using a spring layout
-    pos = nx.spring_layout(G, pos=pos_dct)
+    # pos = nx.spring_layout(G)
 
     # Define visualization options
     options = {
@@ -22,7 +22,7 @@ def plot_path(edges, pos_dct):
     }
 
     # Draw the graph with options
-    nx.draw_networkx(G, pos, **options)
+    nx.draw_networkx(G, pos=pos_dct, **options)
 
     # Adjust margins before disabling axes
     ax = plt.gca()        
@@ -31,3 +31,5 @@ def plot_path(edges, pos_dct):
     # Turn off axes and show the plot
     plt.axis("off")
     plt.show()
+    time.sleep(3)
+    plt.close()

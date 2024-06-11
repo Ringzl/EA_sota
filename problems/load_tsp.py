@@ -114,7 +114,7 @@ class CTSP:
 if __name__ == "__main__":
     fpath = "/home/yongcun/work/optimize/ec/problems/TSP/ch130.txt"
     prob = TSP(fpath)
-
+    
     print(prob.size)
 
 

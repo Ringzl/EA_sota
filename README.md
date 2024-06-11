@@ -134,6 +134,7 @@ Problem Definitions and Evaluation Criteria for the CEC 2017 Competition on Cons
 * **测试算法**
 
 TSP问题数学建模 (MTZ)：
+
 $$
 min \sum_{i \in V}\sum_{j \in V} c_{ij} x_{ij} \\
 s.t. \sum_{j \in V} x_{ij} = 1, \forall i \in V, \\
@@ -158,7 +159,7 @@ u_i - u_j + Nx_{ij} \leq N-1, \forall i,j \in V-{1}, i\neq j \\
 u_i \geq 0, \forall i \in V
 $$
     
-起点{1}除外，$u_i$为辅助变量，无实际意义。
+起点{1}除外, $u_i$ 为辅助变量，无实际意义。
 
 * **pyomo+SCIP**： SCIP 开源求解器
 * **pyomo+Gurobi**： Gurobi 商用求解器

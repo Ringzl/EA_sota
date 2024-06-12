@@ -136,13 +136,16 @@ Problem Definitions and Evaluation Criteria for the CEC 2017 Competition on Cons
 TSP问题数学建模 (MTZ)：
 
 $$
-min \sum_{i \in V}\sum_{j \in V} c_{ij} x_{ij} \\
-s.t. \sum_{j \in V} x_{ij} = 1, \forall i \in V, \\
-\sum_{i \in V} x_{ij} = 1, \forall j \in V, \\
-u_i - u_j + Nx_{ij} \leq N-1, \forall ij \in V-\{1\}\\
-x_{ij} \in \{0,1\}, \forall i,j \in V, \\
-u_i \in R_+^0, \forall i \in V
+\begin{align}
+min &\sum_{i \in V}\sum_{j \in V} c_{ij} x_{ij} \\
+s.t. &\sum_{j \in V} x_{ij} = 1, \forall i \in V, \\
+&\sum_{i \in V} x_{ij} = 1, \forall j \in V, \\
+&u_i - u_j + Nx_{ij} \leq N-1, \forall ij \in V-\{1\}\\
+&x_{ij} \in \{0,1\}, \forall i,j \in V, \\
+&u_i \in R_+^0, \forall i \in V
+\end{align}
 $$
+
 
 * Miller-Tucker-Zemlin formulation（MTZ建模） 
 
@@ -155,8 +158,10 @@ $$
 MTZ约束消除子环路：
 
 $$
-u_i - u_j + Nx_{ij} \leq N-1, \forall i,j \in V-{1}, i\neq j \\
-u_i \geq 0, \forall i \in V
+\begin{align}
+& u_i - u_j + Nx_{ij} \leq N-1, \forall i,j \in V-{1}, i\neq j \\
+& u_i \geq 0, \forall i \in V
+\end{align}
 $$
     
 起点{1}除外, $u_i$ 为辅助变量，无实际意义。
@@ -196,6 +201,36 @@ pyomo + Gurobi 限制最大运行时长为300时：
 
 #### CVRP问题
 
+CVRP 数学建模：
+顾客集合： $C = \{1,2,...,n\}$
+顶点集合： $V = C \cup \{0, n+1\}$
+车辆集合： $K = \{1,...,k\}$
+车辆总容量： $Q$
+顾客$j$的需求： $q_j$
+路径成本： $c_{ij}$
+
+变量：
+$y_{ik}$ 表示是否将顾客$i$指派给车辆$k$
+$x_{ij}^k$ 表示车辆$k$从$i$访问$j$的弧是否被选择
+
+$$
+\begin{align}
+\min &\sum_{i \in V}\sum_{j \in V}\sum_{k \in K} c_{ij}x_{ij}^k \\
+s.t. &\sum_{k \in K}\sum_{j \in V}x_{ij}^k = 1, \forall i \in C \\
+& \sum_{i \in V}x_{0j}^k = 1, \forall k \in K\\
+& \sum_{i \in V}x_{in+1}^k = 1, \forall k \in K\\
+& \sum_{i \in V}x_{ih}^k = \sum_{j \in V}x_{hj}^k, \forall h \in C, \forall k \in K \\
+& u_{ik} - u_{jk} + Nx_{ij}^k \leq N-1, \forall k \in K, \forall i \in \{0,1,...,n\}, \forall j \in \{1,...,n+1\}, i \neq j\\
+& \sum_{i \in C}\sum_{j\in V}q_ix_{ij}^k \leq Q, \forall k \in K \\ 
+& x_{ijk} \in \{0,1\}, \forall (i,j) \in A, \forall k \in K 
+\end{align}
+$$
+
+MTZ约束破子环。
+
+测试数据集： Set A (Augerat, 1995)
+
+文件名形如 A-n31-k5，其中 n 后跟着测试问题的节点数，k 后跟着问题的最大车辆数。
 
 
 

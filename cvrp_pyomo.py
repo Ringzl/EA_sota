@@ -13,25 +13,31 @@ class CVRPOpt:
         self.n_nodes = prob.n_nodes
         self.capacity = prob.capacity
         self.graph = prob.graph
-        self.dis_matrix = spd.squareform(spd.pdist(list(prob.graph.values())))
         self.demands = prob.demands
 
+        # 增加一个虚拟终点车场
+        self.n_nodes = self.n_nodes+1
+        self.demands[self.n_nodes] = self.demands[1]
+        self.graph[self.n_nodes] = self.graph[1]
+
+        self.dis_matrix = spd.squareform(spd.pdist(list(prob.graph.values())))
+
     def __obj_func(self, model):
-        return pyo.quicksum(model.x[k,i,j] * self.dis_matrix[i-1, j-1] for k,i,j in model.xset)
+        return pyo.quicksum(model.x[i,j,k] * self.dis_matrix[i-1, j-1] for i,j,k in model.xset)
     
     def __rule_con1(self, model, I):
-        return pyo.quicksum(model.x[k,I,j] for k,i,j in model.xset if i == I) == 1
+        return pyo.quicksum(model.x[I,j,k] for i,j,k in model.xset if i == I) == 1
     
     def __rule_con2_1(self, model, K):
-        return  pyo.quicksum(model.x[K,1,j] for k,i,j in model.xset if i == 1 and k == K) == 1
+        return  pyo.quicksum(model.x[1,j,K] for i,j,k in model.xset if i == 1 and k == K) == 1
     def __rule_con2_2(self, model, K):
-        return pyo.quicksum(model.x[K,i,self.n_nodes] for k,i,j in model.xset if j == self.n_nodes and k == K) == 1
+        return pyo.quicksum(model.x[i,self.n_nodes,K] for i,j,k in model.xset if j == self.n_nodes and k == K) == 1
     
     def __rule_con3(self, model, H, K):
-        return pyo.quicksum(model.x[K, i, H] for k,i,j in model.xset if k==K and j==H) == pyo.quicksum(model.x[K, H, j] for k,i,j in model.xset if k==K and i==H)
+        return pyo.quicksum(model.x[i, H, K] for i,j,k in model.xset if k==K and j==H) == pyo.quicksum(model.x[H, j, K] for i,j,k in model.xset if k==K and i==H)
 
     def __rule_con5(self, model, K):
-        return pyo.quicksum(model.x[K, i, j] * self.demands[i] for k,i,j in model.xset if k == K) <= self.capacity
+        return pyo.quicksum(model.x[i, j, K] * self.demands[i] for i,j,k in model.xset if k == K) <= self.capacity
     
     def create_model(self):
         
@@ -47,10 +53,10 @@ class CVRPOpt:
             for i in self.model.V-{self.n_nodes}:
                 for j in self.model.V:
                     if i!=j:
-                        X_set.append((k, i, j))
+                        X_set.append((i, j, k))
         self.model.xset = pyo.Set(initialize=X_set)
         self.model.x = pyo.Var(self.model.xset, within=pyo.Binary)
-        self.model.u = pyo.Var(self.moddel.K, within=pyo.NonNegativeReals)
+        self.model.u = pyo.Var(self.model.V, self.model.K, within=pyo.NonNegativeReals)
 
         # 目标函数
         self.model.obj = pyo.Objective(rule=self.__obj_func, sense=pyo.minimize)
@@ -69,7 +75,7 @@ class CVRPOpt:
             for j in self.model.V - {1}:
                 if i != j:
                     for k in self.model.K:
-                            expr = self.model.u[i,k] - self.model.u[j,k] + self.n_nodes * self.model.x[k,i,j] <= self.n_nodes - 1
+                            expr = self.model.u[i,k] - self.model.u[j,k] + self.n_nodes * self.model.x[i,j,k] <= self.n_nodes - 1
                             self.model.con4.add(expr=expr)
     
         self.model.con5 = pyo.Constraint(self.model.K, rule=self.__rule_con5)
@@ -88,9 +94,9 @@ class CVRPOpt:
             solver.options['TimeLimit'] = TIME_LIMIT
         elif 'xpress' in solver_name:
             solver.options['maxtime'] = TIME_LIMIT 
-        results = solver.solve(self.model, timelimit=TIME_LIMIT, tee=False)
+        results = solver.solve(self.model, timelimit=TIME_LIMIT, tee=True)
         end = time.time()
-    
+
         arcs = []
         try:
             print(f"最优解是：{pyo.value(self.model.obj):.2f}, 运行时间： {end-start:.2f} s")
@@ -102,7 +108,7 @@ class CVRPOpt:
         except:
             print("模型不可行")
             return []
-        
+
 class CVRPOpt2:
     def __init__(self, prob):
         self.n_trucks = prob.n_trucks
@@ -193,11 +199,14 @@ if __name__ == "__main__":
     # print(prob.graph)
     
     # 优化
-    opt = CVRPOpt2(prob)
+    opt = CVRPOpt(prob)
     opt.create_model()
-    edges = opt.solve_model('gurobi_direct', TIME_LIMIT=10000)  # gurobi_direct scip
+    # opt.print_model()
+    
+    edges = opt.solve_model('gurobi_direct', TIME_LIMIT=300)  # gurobi_direct scip
     print(edges)
-    pp1(edges, prob.graph)
+    # pp1(edges, prob.graph)
+    ppx(edges, prob.graph)
     
 
 

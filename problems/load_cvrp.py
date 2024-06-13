@@ -32,12 +32,6 @@ class CVRP:
         capacity = int(capacity)
         optimalValue = int(optimalValue)
         n_trucks = int(n_trucks)
-
-        # 增加一个虚拟终点车场
-        end = len(demand)+1
-        demand[end] = demand[1]
-        graph[end] = graph[1]
-        
         n_nodes = len(graph)
 
         return capacity, graph, demand, optimalValue, name, n_trucks, n_nodes

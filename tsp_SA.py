@@ -21,7 +21,6 @@ class SA:
         self.route = self.start
         self.cost_min = self.visited[self.start]
 
-
     #反转一段区间，获取新邻域
     def getNei_rev(self, path):
         cost_min = np.inf

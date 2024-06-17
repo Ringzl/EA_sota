@@ -615,7 +615,7 @@ class ALNS:
                     s = deepcopy(s2)
                     # Neu nghiem cu tot hon nghiem tot nhat tim duoc -> cap nhat trang thai ALNS len console
                     if s2.totalCost < best.totalCost:
-                        print(s2.totalCost)
+                        # print(s2.totalCost)
                         test = 0
                         best = deepcopy(s2)
                         # Cap nhat diem dua tren performance
@@ -643,31 +643,30 @@ class ALNS:
                 if s.totalCost < best.totalCost:
                     best = deepcopy(s)
 
-            # In ra nghiem tot nhat tim duoc
-            print(best)
+        # In ra nghiem tot nhat tim duoc
+        print(best)
 
-            # Luu ket qua vao file
-            t = time.localtime()
-            current_time = time.strftime("%H_%M_%S", t)
-            if not os.path.exists(Config.PROJECT_PATH + "/cvrp_alns_results/" + self.filename.split(".vrp")[0]):
-                os.mkdir(Config.PROJECT_PATH + "/cvrp_alns_results/" + self.filename.split(".vrp")[0])
-            f = open(Config.PROJECT_PATH + "/cvrp_alns_results/" + self.filename.split(".vrp")[0] + "/" + current_time + ".txt", "wt")
-            f.write(best.__str__())
-            f.close()
+        # Luu ket qua vao file
+        t = time.localtime()
+        current_time = time.strftime("%H_%M_%S", t)
+        if not os.path.exists(Config.PROJECT_PATH + "/cvrp_alns_results/" + self.filename.split(".vrp")[0]):
+            os.makedirs(Config.PROJECT_PATH + "/cvrp_alns_results/" + self.filename.split(".vrp")[0])
+        f = open(Config.PROJECT_PATH + "/cvrp_alns_results/" + self.filename.split(".vrp")[0] + "/" + current_time + ".txt", "wt")
+        f.write(best.__str__())
+        f.close()
 
-
-            for route in best.routes:
-                x = []
-                y = []
-                for node in route.route:
-                    x.append(node.x)
-                    y.append(node.y)
-                plt.plot(x, y)
-                plt.plot(x, y, 'or')
-                plt.plot(best.routes[0].route[0].x, best.routes[0].route[0].y, "sk")
-            plt.title("VRP Solution (Cost = " + str("%.2f" % best.totalCost) + ")")
-            plt.savefig(Config.PROJECT_PATH + "/cvrp_alns_results/" + self.filename.split(".vrp")[0] + "/" + current_time + ".png")
-            plt.show()
+        for route in best.routes:
+            x = []
+            y = []
+            for node in route.route:
+                x.append(node.x)
+                y.append(node.y)
+            plt.plot(x, y)
+            plt.plot(x, y, 'or')
+            plt.plot(best.routes[0].route[0].x, best.routes[0].route[0].y, "sk")
+        plt.title("VRP Solution (Cost = " + str("%.2f" % best.totalCost) + ")")
+        plt.savefig(Config.PROJECT_PATH + "/cvrp_alns_results/" + self.filename.split(".vrp")[0] + "/" + current_time + ".png")
+        plt.show()
 
 
 if __name__ == "__main__":

@@ -72,7 +72,6 @@ class SA:
             self.model.tem_distance = self.model.best_sol.obj
             for _ in range(self.temp_iter):
                 temp_sol = Sol()    # 当前解
-                # routes_list = deepcopy(self.model.best_sol.routes)
                 routes_list = deepcopy(currect_sol.routes)
                 new_routes_list, pop_nodes = randomPop(routes_list, self.model)
                 temp_sol.routes, temp_sol.obj = rebuildList(
@@ -383,6 +382,6 @@ def draw(model):
     plt.show()
 
 if __name__ == "__main__":
-    fpath = "/home/yongcun/work/optimize/ec/problems/CVRP/A-n32-k5.vrp"
+    fpath = "./problems/CVRP/A-n32-k5.vrp"
     sa=SA(fpath)
     sa.run()

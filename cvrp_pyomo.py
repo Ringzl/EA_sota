@@ -94,7 +94,7 @@ class CVRPOpt:
             solver.options['TimeLimit'] = TIME_LIMIT
         elif 'xpress' in solver_name:
             solver.options['maxtime'] = TIME_LIMIT 
-        results = solver.solve(self.model, timelimit=TIME_LIMIT, tee=True)
+        results = solver.solve(self.model, timelimit=TIME_LIMIT, tee=False)
         end = time.time()
 
         arcs = []
@@ -193,8 +193,14 @@ class CVRPOpt2:
 
 
 if __name__ == "__main__":
+    '''
+    A-n32-k5
+    A-n48-k7
+    A-n60-k9
+    '''
     # 问题
-    fpath = "/home/yongcun/work/optimize/ec/problems/CVRP/A-n32-k5.vrp"
+    fname = "A-n60-k9"
+    fpath = f"/home/yongcun/work/optimize/ec/problems/CVRP/{fname}.vrp"
     prob = CVRP(fpath)
     # print(prob.graph)
     

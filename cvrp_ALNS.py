@@ -651,9 +651,9 @@ class ALNS:
         current_time = time.strftime("%H_%M_%S", t)
         if not os.path.exists(Config.PROJECT_PATH + "/cvrp_alns_results/" + self.filename.split(".vrp")[0]):
             os.makedirs(Config.PROJECT_PATH + "/cvrp_alns_results/" + self.filename.split(".vrp")[0])
-        f = open(Config.PROJECT_PATH + "/cvrp_alns_results/" + self.filename.split(".vrp")[0] + "/" + current_time + ".txt", "wt")
-        f.write(best.__str__())
-        f.close()
+        # f = open(Config.PROJECT_PATH + "/cvrp_alns_results/" + self.filename.split(".vrp")[0] + "/" + current_time + ".txt", "wt")
+        # f.write(best.__str__())
+        # f.close()
 
         for route in best.routes:
             x = []
@@ -664,12 +664,19 @@ class ALNS:
             plt.plot(x, y)
             plt.plot(x, y, 'or')
             plt.plot(best.routes[0].route[0].x, best.routes[0].route[0].y, "sk")
-        plt.title("VRP Solution (Cost = " + str("%.2f" % best.totalCost) + ")")
-        plt.savefig(Config.PROJECT_PATH + "/cvrp_alns_results/" + self.filename.split(".vrp")[0] + "/" + current_time + ".png")
+        plt.title("ALNS VRP Solution (Cost = " + str("%.2f" % best.totalCost) + ")")
+        # plt.savefig(Config.PROJECT_PATH + "/cvrp_alns_results/" + self.filename.split(".vrp")[0] + "/" + current_time + ".png")
         plt.show()
 
 
 if __name__ == "__main__":
-    alns = ALNS('A-n32-k5')
+    '''
+    A-n32-k5
+    A-n48-k7
+    A-n60-k9
+    '''
+    alns = ALNS('A-n60-k9')
+    start = time.time()
     alns.run()
-    
+    end = time.time()
+    print(f"运行时间： {end-start:.2f} s")

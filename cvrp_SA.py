@@ -1,4 +1,5 @@
 import random
+import time
 from math import sqrt, exp
 from copy import deepcopy
 import numpy as np
@@ -97,11 +98,13 @@ class SA:
 
     def run(self):
         print('Begin')
+        start = time.time()
         self.__auxiliaryPredefine()
         self.__simulatedAnnealing()
+        end = time.time()
         showInfo(self.model)
         # saveToFile(self.model)
-        print('End')
+        print(f'运行时间： {end-start:.2f}s End')
 
 def readVRPFile(file_path, model):
     node_seq_no = -1
@@ -370,6 +373,7 @@ def draw(model):
     routeX.append(model.depot.x_coord)
     routeY.append(model.depot.y_coord)
     plt.scatter(routeX, routeY, marker='o')
+    plt.title("SA VRP Solution (Cost = " + str("%.2f" % model.best_sol.obj) + ")")
     # 绘制Routes
     for i in range(len(model.best_sol.routes)):
         routeX, routeY = [model.depot.x_coord], [model.depot.y_coord]
@@ -382,6 +386,11 @@ def draw(model):
     plt.show()
 
 if __name__ == "__main__":
-    fpath = "./problems/CVRP/A-n32-k5.vrp"
+    '''
+    A-n32-k5
+    A-n48-k7
+    A-n60-k9
+    '''
+    fpath = "./problems/CVRP/A-n60-k9.vrp"
     sa=SA(fpath)
     sa.run()

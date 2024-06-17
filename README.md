@@ -232,6 +232,24 @@ MTZ约束破子环。
 
 文件名形如 A-n32-k5，其中 n 后跟着测试问题的节点数，k 后跟着问题的最大车辆数。
 
+* **实验结果**
+
+| 算法/问题        | A-n32-k5           | A-n48-k7           |  A-n60-k9          |
+|--------------|--------------------|--------------------|--------------------|
+| pyomo+Gurobi | **800.41 ( 300.16 s)** | 1213.65 (300.58 s) | 1595.09 (301.10 s) |
+| SA           | 890.0 (35.17s)     | **1162.0 (80.56 s)**   | **1472.0 (136.80s)**   |
+| ALNS         | 854.67 (21.97 s)   | 1286.61 (14.16 s)  | 1724.49 (18.90 s)  |
+
+A-n32-k5： 
+|   pyomo+Gurobi          | SA          | ALNS      |
+|--------------|--------------------|--------------------|
+| <div align="center"> <img src="https://s2.loli.net/2024/06/17/j4bYeAnr1ziagPU.png" width="300" /> </div> | <div align="center"> <img src="https://s2.loli.net/2024/06/17/Cru6KiMew7zA8qT.png" width="300" /> </div>  | <div align="center"> <img src="https://s2.loli.net/2024/06/17/jVlnyivU7GQRkdT.png" width="300" /> </div>  |
+
+
+
+
+
+
 
 
 
